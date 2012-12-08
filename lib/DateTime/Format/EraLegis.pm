@@ -3,17 +3,9 @@ package DateTime::Format::EraLegis;
 # ABSTRACT: DateTime formatter for Era Legis (http://oto-usa.org/calendar.html)
 
 use 5.010;
-use Moose;
-use MooseX::Attribute::Chained;
+use Any::Moose;
 use JSON;
 use Method::Signatures;
-
-has 'format' => (
-    traits => ['Chained'],
-    is => 'rw',
-    isa => 'Str',
-    default => '',
-    );
 
 has 'ephem' => (
     is => 'ro',
@@ -22,21 +14,21 @@ has 'ephem' => (
     );
 
 has 'style' => (
-    is => 'rw',
+    is => 'ro',
     isa => 'DateTime::Format::EraLegis::Style',
     lazy_build => 1,
     );
 
 method _build_ephem {
-    return DateTime::Format::EraLegis::Ephem->new();
+    return DateTime::Format::EraLegis::Ephem->new;
 }
 
 method _build_style {
-    return DateTime::Format::EraLegis::Style->new();
+    return DateTime::Format::EraLegis::Style->new;
 }
 
 
-method format_datetime(DateTime $dt) {
+method format_datetime(DateTime $dt, Str $format = 'plain') {
     $dt = $dt->clone;
 
     ### Day of week should match existing time zone
@@ -59,10 +51,10 @@ method format_datetime(DateTime $dt) {
 
     $tdate{plain} = $self->style->express( \%tdate );
 
-    if ($self->format eq 'json') {
+    if ($format eq 'json') {
         return JSON->new->pretty->encode(\%tdate);
     }
-    elsif ($self->format eq 'raw') {
+    elsif ($format eq 'raw') {
         return \%tdate;
     }
     else {
@@ -72,13 +64,13 @@ method format_datetime(DateTime $dt) {
 
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
+no Any::Moose;
 
 ######################################################
 package DateTime::Format::EraLegis::Ephem;
 
 use 5.010;
-use Moose;
+use Any::Moose;
 use Carp;
 use DBI;
 use Method::Signatures;
@@ -118,24 +110,21 @@ method lookup(Str $body, DateTime $dt) {
 }
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
+no Any::Moose;
 
 ######################################################
 
 package DateTime::Format::EraLegis::Style;
 
 use 5.010;
-use Moose;
+use Any::Moose;
 use utf8;
 use Roman::Unicode qw(to_roman);
-use Moose::Util::TypeConstraints;
 use Method::Signatures;
-
-enum 'Language', [qw( latin symbol english poor-latin )];
 
 has 'lang' => (
     is => 'ro',
-    isa => 'Language',
+    isa => 'Str',
     default => 'latin',
     required => 1,
     );
@@ -253,7 +242,7 @@ method express( HashRef $tdate ) {
 }
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
+no Any::Moose;
 1;
 
 __END__
@@ -289,7 +278,8 @@ permutable by boolean attributes.
 
 All three classes are built with Moose and behave accordingly. Method
 arguments are typechecked and will die on failure. Defaults exist for
-all attributes.
+all attributes. All attributes are read-only and must be assigned at
+the time of instantiation.
 
 =head1 ATTRIBUTES AND METHODS
 
@@ -311,12 +301,9 @@ style: DT::F::EL::Style object. Creates a new one by default.
 
 =item *
 
-format: Output format, one of 'html', 'plain', 'json'. Defaults to 'plain'.
-
-=item *
-
-format_datetime(DateTime $dt): Standard interface for a DateTime::Format
-package.
+format_datetime(DateTime $dt, Str $format): Standard interface for a
+DateTime::Format package. $format is one of 'plain', 'json', or 'raw'.
+Defaults to 'plain'.
 
 =back
 
