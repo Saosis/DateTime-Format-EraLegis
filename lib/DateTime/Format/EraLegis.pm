@@ -255,3 +255,154 @@ method express( HashRef $tdate ) {
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;
+
+__END__
+
+=head1 NAME
+
+DateTime::Format::EraLegis - DateTime converter for Era Legis
+DateTime::Format::EraLegis::Ephem - planetary ephemeris data
+DateTime::Format::EraLegis::Style - customize output styles
+
+=head1 SYNOPSIS
+
+ use DateTime::Format::EraLegis;
+
+ my $ephem = DateTime::Format::EraLegis::Ephem->new(
+     ephem_db => 'db.sqlite3');
+ my $style = DateTime::Format::EraLegis::Style->new(
+     show_terse => 1, lang => 'symbol');
+ my $dtf = DateTime::Format::EraLegis->new(
+     ephem => $ephem, style => $style);
+
+ my $dt->set_formatter($dtf);
+
+=head1 DESCRIPTION
+
+These three modules combined enable DateTime objects to emit date strings
+formatted according to the Thelemic calendar. The ephemeris provides access
+to the planetary location of the Sun and Moon keyed by UTC timestamp. The
+style dictates the specific expression of the of datetime value using a
+template into which one can place tokens which can be converted into the
+sign/degree coordinates for the given date. A default style exists and is
+permutable by boolean attributes.
+
+All three classes are built with Moose and behave accordingly. Method
+arguments are typechecked and will die on failure. Defaults exist for
+all attributes.
+
+=head1 ATTRIBUTES AND METHODS
+
+=over
+
+=item *
+
+DateTime::Format::EraLegis
+
+=over
+
+=item *
+
+ephem: DT::F::EL::Ephem object. Creates a new one by default.
+
+=item *
+
+style: DT::F::EL::Style object. Creates a new one by default.
+
+=item *
+
+format: Output format, one of 'html', 'plain', 'json'. Defaults to 'plain'.
+
+=item *
+
+format_datetime(DateTime $dt): Standard interface for a DateTime::Format
+package.
+
+=back
+
+=item *
+
+DateTime::Format::Ephem
+
+=over
+
+=item *
+
+ephem_db: Filename of the sqlite3 ephemeris database. Defaults to the value
+of $ENV{ERALEGIS_EPHEMDB}.
+
+=item *
+
+dbh: DBI handle for ephemeris database. Defaults to creating a new one pointing
+to the ephem_db database.
+
+=item *
+
+lookup(Str $body, DateTime $dt): $body is one of "sol" or "luna". $dt is the
+date in question (in UTC!). Returns the number of degrees away from 0 degrees
+Aries. Divide by thirty to get the sign. Modulo by thirty to get the degrees
+of that sign.
+
+=back
+
+=item *
+
+DateTime::Format::EraLegis::Style
+
+=over
+
+=item *
+
+template: Assign a custom template value. Variables (enclosed in '{}')
+include 'ssign' and 'sdeg' for Sol sign and degree, 'lsign' and 'ldeg'
+for Luna sign and degree, 'dow' for day of the week, and 'year1' and
+'year2' for the two docosades. Example:
+
+ "Sol in {sdeg} degrees {ssign}, anno {year1}{year2} era legis"
+
+Interpolated values get assigned based on the setting of 'lang'.
+
+=item *
+
+lang: Set the output language, one of latin, english, symbol, poor-latin.
+Defaults to 'latin'.
+
+=item *
+
+show_terse, show_deg, show_dow, show_year, roman_year: Flags to direct
+the style to alter the default template.
+
+=back
+
+=back
+
+=head1 DATABASE SCHEMA
+
+The schema is very simple and the querying SQL very generic. Most DBI
+backends should work without issue, though SQLite3 is the only tested
+one. The schema is:
+
+ CREATE TABLE ephem (
+   body TEXT,               -- one of 'sol' or 'luna'
+   time DATETIME,           -- UTC timestamp of shift into degree
+   degree INTEGER NOT NULL, -- degrees from 0 degrees Aries
+   PRIMARY KEY (body, time)
+ );
+
+=head1 BUGS
+
+Please report bugs via GitHub issues:
+https://github.com/ctfliblime/DateTime-Format-EraLegis
+
+=head1 AUTHOR
+
+Clay Fouts <cfouts@khephera.net>
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright (c) 2012 Clay Fouts
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
