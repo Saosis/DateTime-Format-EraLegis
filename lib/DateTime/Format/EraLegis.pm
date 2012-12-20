@@ -20,7 +20,7 @@ has 'style' => (
     );
 
 method _build_ephem {
-    return DateTime::Format::EraLegis::Ephem->new;
+    return DateTime::Format::EraLegis::Ephem::DBI->new;
 }
 
 method _build_style {
@@ -68,12 +68,22 @@ no Any::Moose;
 
 ######################################################
 package DateTime::Format::EraLegis::Ephem;
+use Any::Moose qw(Role);
+
+requires 'lookup';
+
+no Any::Moose;
+
+######################################################
+package DateTime::Format::EraLegis::Ephem::DBI;
 
 use 5.010;
 use Any::Moose;
 use Carp;
 use DBI;
 use Method::Signatures;
+
+with 'DateTime::Format::EraLegis::Ephem';
 
 has 'ephem_db' => (
     is => 'ro',
