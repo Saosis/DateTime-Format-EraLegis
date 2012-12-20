@@ -259,15 +259,16 @@ __END__
 
 =head1 NAME
 
-DateTime::Format::EraLegis - DateTime converter for Era Legis
-DateTime::Format::EraLegis::Ephem - planetary ephemeris data
-DateTime::Format::EraLegis::Style - customize output styles
+ DateTime::Format::EraLegis - DateTime converter for Era Legis
+ DateTime::Format::EraLegis::Ephem - planetary ephemeris role
+ DateTime::Format::EraLegis::Ephem::DBI - default ephemeris getter
+ DateTime::Format::EraLegis::Style - customize output styles
 
 =head1 SYNOPSIS
 
  use DateTime::Format::EraLegis;
 
- my $ephem = DateTime::Format::EraLegis::Ephem->new(
+ my $ephem = DateTime::Format::EraLegis::Ephem::DBI->new(
      ephem_db => 'db.sqlite3');
  my $style = DateTime::Format::EraLegis::Style->new(
      show_terse => 1, lang => 'symbol');
@@ -303,7 +304,7 @@ DateTime::Format::EraLegis
 
 =item *
 
-ephem: DT::F::EL::Ephem object. Creates a new one by default.
+ephem: DT::F::EL::Ephem object. Creates a new DBI one by default.
 
 =item *
 
@@ -319,9 +320,29 @@ Defaults to 'plain'.
 
 =item *
 
-DateTime::Format::Ephem
+DateTime::Format::EraLegis::Ephem (Role)
 
 =over
+
+=item *
+
+lookup(Str $body, DateTime $dt): Required by any role consumer. $body
+is one of "sol" or "luna". $dt is the date in question (in UTC!).
+Returns the number of degrees away from 0 degrees Aries. Divide by
+thirty to get the sign. Modulo by thirty to get the degrees of that
+sign.
+
+=back
+
+=item *
+
+DateTime::Format::EraLegis::Ephem::DBI
+
+=over
+
+=item *
+
+Consumes DT::F::EL::Ephem role.
 
 =item *
 
@@ -332,13 +353,6 @@ of $ENV{ERALEGIS_EPHEMDB}.
 
 dbh: DBI handle for ephemeris database. Defaults to creating a new one pointing
 to the ephem_db database.
-
-=item *
-
-lookup(Str $body, DateTime $dt): $body is one of "sol" or "luna". $dt is the
-date in question (in UTC!). Returns the number of degrees away from 0 degrees
-Aries. Divide by thirty to get the sign. Modulo by thirty to get the degrees
-of that sign.
 
 =back
 
@@ -375,9 +389,9 @@ the style to alter the default template.
 
 =head1 DATABASE SCHEMA
 
-The schema is very simple and the querying SQL very generic. Most DBI
-backends should work without issue, though SQLite3 is the only tested
-one. The schema is:
+The schema for the DBI ephemeris table is very simple and the querying
+SQL very generic. Most DBI backends should work without issue, though
+SQLite3 is the only one tested. The schema is:
 
  CREATE TABLE ephem (
    body TEXT,               -- one of 'sol' or 'luna'
