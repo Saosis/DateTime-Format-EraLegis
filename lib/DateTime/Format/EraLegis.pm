@@ -39,15 +39,25 @@ method format_datetime(DateTime $dt, Str $format = 'plain') {
 
     my %tdate = (
         evdate => $dt->ymd . ' ' . $dt->hms,
-        year => [ int(($dt->year - 1904)/22), ($dt->year - 1904)%22 ],
         dow => $dow,
         );
 
     for ( qw(sol luna) ) {
         my $deg = $self->ephem->lookup( $_, $dt );
         $tdate{$_}{sign} = int($deg / 30);
-        $tdate{$_}{deg} = $deg % 30;
+        $tdate{$_}{deg} = int($deg % 30);
     }
+
+    my $year1 = int( ($dt->year - 1904) / 22 );
+    my $year2 = ($dt->year - 1904) % 22;
+    if ($dt->month <= 3 && $tdate{sol}{sign} > 0 && $dt->year > 1904) {
+        $year2--;
+        if ($year2 == -1) {
+            $year2 = 21;
+            $year1--;
+        }
+    }
+    $tdate{year} = [ int $year1, int $year2 ];
 
     $tdate{plain} = $self->style->express( \%tdate );
 
