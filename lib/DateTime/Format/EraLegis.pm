@@ -4,7 +4,6 @@ package DateTime::Format::EraLegis;
 
 use 5.010;
 use Any::Moose;
-use JSON;
 use Method::Signatures;
 
 has 'ephem' => (
@@ -61,15 +60,7 @@ method format_datetime(DateTime $dt, Str $format = 'plain') {
 
     $tdate{plain} = $self->style->express( \%tdate );
 
-    if ($format eq 'json') {
-        return JSON->new->pretty->encode(\%tdate);
-    }
-    elsif ($format eq 'raw') {
-        return \%tdate;
-    }
-    else {
-        return $tdate{plain};
-    }
+    return ($format eq 'raw') ? \%tdate : $tdate{plain};
 }
 
 
@@ -323,7 +314,7 @@ style: DT::F::EL::Style object. Creates a new one by default.
 =item *
 
 format_datetime(DateTime $dt, Str $format): Standard interface for a
-DateTime::Format package. $format is one of 'plain', 'json', or 'raw'.
+DateTime::Format package. $format is one of 'plain' or 'raw'.
 Defaults to 'plain'.
 
 =back
