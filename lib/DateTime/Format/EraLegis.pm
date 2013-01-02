@@ -47,16 +47,9 @@ method format_datetime(DateTime $dt, Str $format = 'plain') {
         $tdate{$_}{deg} = int($deg % 30);
     }
 
-    my $year1 = int( ($dt->year - 1904) / 22 );
-    my $year2 = ($dt->year - 1904) % 22;
-    if ($dt->month <= 3 && $tdate{sol}{sign} > 0 && $dt->year > 1904) {
-        $year2--;
-        if ($year2 == -1) {
-            $year2 = 21;
-            $year1--;
-        }
-    }
-    $tdate{year} = [ int $year1, int $year2 ];
+    my $years = $dt->year -
+        (($dt->month <= 3 && $tdate{sol}{sign} > 0) ? 1905 : 1904);
+    $tdate{year} = [ int( $years/22 ), int( $years%22 ) ];
 
     $tdate{plain} = $self->style->express( \%tdate );
 
